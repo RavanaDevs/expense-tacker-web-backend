@@ -2,6 +2,19 @@ import { Request, Response, NextFunction } from 'express'
 import { expenseSchema, bulkExpenseSchema } from '../validators/expenseSchemaValidator'
 import Expense from '../models/expenseModel'
 
+interface ExpenseStats {
+  total: number
+  average: number
+  highest: {
+    category: string
+    amount: number
+  }
+  topCategory: {
+    category: string
+    count: number
+  }
+}
+
 export const createExpense = async (
   req: Request,
   res: Response,
@@ -179,6 +192,89 @@ export const bulkCreateExpenses = async (
       count: result.length,
       expenses: result 
     })
+  } catch (err) {
+    next(err)
+  }
+}
+
+export const getExpenseStats = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { startDate, endDate, category } = req.query
+    const query: any = { user: req.user._id }
+
+    // Add date range filter if provided
+    if (startDate || endDate) {
+      query.date = {}
+      if (startDate) {
+        query.date.$gte = new Date(startDate as string)
+      }
+      if (endDate) {
+        query.date.$lte = new Date(endDate as string)
+      }
+    }
+
+    // Add category filter if provided
+    if (category) {
+      query.category = category
+    }
+
+    // Get all matching expenses
+    const expenses = await Expense.find(query)
+
+    if (expenses.length === 0) {
+      res.status(200).json({
+        total: 0,
+        average: 0,
+        highest: null,
+        topCategory: null,
+      })
+      return
+    }
+
+    // Calculate total
+    const total = expenses.reduce((sum, expense) => sum + expense.amount, 0)
+
+    // Calculate average
+    const average = total / expenses.length
+
+    // Find highest expense category
+    const highest = expenses.reduce(
+      (max, expense) => {
+        return expense.amount > max.amount
+          ? { category: expense.category, amount: expense.amount }
+          : max
+      },
+      { category: '', amount: 0 }
+    )
+
+    // Calculate category frequencies
+    const categoryFrequency = expenses.reduce((freq: { [key: string]: number }, expense) => {
+      freq[expense.category] = (freq[expense.category] || 0) + 1
+      return freq
+    }, {})
+
+    // Find most frequent category
+    const topCategory = Object.entries(categoryFrequency).reduce(
+      (max, [category, count]) => {
+        return count > max.count
+          ? { category, count }
+          : max
+      },
+      { category: '', count: 0 }
+    )
+
+    const stats: ExpenseStats = {
+      total,
+      average,
+      highest,
+      topCategory,
+    }
+
+    res.status(200).json(stats)
   } catch (err) {
     next(err)
   }
