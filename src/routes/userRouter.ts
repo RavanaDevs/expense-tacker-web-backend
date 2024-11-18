@@ -6,8 +6,12 @@ import {
   updateUser,
   deleteUser 
 } from '../controllers/userController'
+import { protect } from '../middlewares/authMiddleware'
 
 const router = express.Router()
+
+// Protect all routes
+router.use(protect)
 
 router.get('/all', getUser)
 router.get('/:id', getUserById)
