@@ -9,6 +9,7 @@ import {
   getExpensesByDate,
   bulkCreateExpenses,
   getExpenseStats,
+  getExpenseStatsByDate,
 } from '../controllers/expenseController'
 
 const router = express.Router()
@@ -20,6 +21,7 @@ router.post('/', createExpense)
 router.post('/bulk', bulkCreateExpenses)
 router.get('/all', getExpenses)
 router.get('/stats', getExpenseStats)
+router.get('/stats/date/:date', getExpenseStatsByDate)
 router.get('/date/:date', getExpensesByDate)
 router.get('/:id', getExpenseById)
 router.put('/:id', updateExpense)

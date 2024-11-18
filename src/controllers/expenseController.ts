@@ -278,4 +278,92 @@ export const getExpenseStats = async (
   } catch (err) {
     next(err)
   }
+}
+
+export const getExpenseStatsByDate = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { date } = req.params
+    const { category } = req.query
+    
+    // Create start and end of the day
+    const startDate = new Date(date)
+    startDate.setHours(0, 0, 0, 0)
+    
+    const endDate = new Date(date)
+    endDate.setHours(23, 59, 59, 999)
+
+    // Build query
+    const query: any = {
+      user: req.user._id,
+      date: {
+        $gte: startDate,
+        $lte: endDate
+      }
+    }
+
+    // Add category filter if provided
+    if (category) {
+      query.category = category
+    }
+
+    // Get all matching expenses
+    const expenses = await Expense.find(query)
+
+    if (expenses.length === 0) {
+      res.status(200).json({
+        total: 0,
+        average: 0,
+        highest: null,
+        topCategory: null,
+      })
+      return
+    }
+
+    // Calculate total
+    const total = expenses.reduce((sum, expense) => sum + expense.amount, 0)
+
+    // Calculate average
+    const average = total / expenses.length
+
+    // Find highest expense category
+    const highest = expenses.reduce(
+      (max, expense) => {
+        return expense.amount > max.amount
+          ? { category: expense.category, amount: expense.amount }
+          : max
+      },
+      { category: '', amount: 0 }
+    )
+
+    // Calculate category frequencies
+    const categoryFrequency = expenses.reduce((freq: { [key: string]: number }, expense) => {
+      freq[expense.category] = (freq[expense.category] || 0) + 1
+      return freq
+    }, {})
+
+    // Find most frequent category
+    const topCategory = Object.entries(categoryFrequency).reduce(
+      (max, [category, count]) => {
+        return count > max.count
+          ? { category, count }
+          : max
+      },
+      { category: '', count: 0 }
+    )
+
+    const stats: ExpenseStats = {
+      total,
+      average,
+      highest,
+      topCategory,
+    }
+
+    res.status(200).json(stats)
+  } catch (err) {
+    next(err)
+  }
 } 
