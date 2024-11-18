@@ -85,4 +85,22 @@ export const signin = async (
   } catch (err) {
     next(err)
   }
+}
+
+export const signout = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    // Since JWT is stateless, we just send a success response
+    // The client should remove the token from storage
+    res.status(200).json({ 
+      message: 'Signout successful',
+      // Optional: send a new token expiry time of now to help client
+      tokenExpiry: new Date().toISOString()
+    })
+  } catch (err) {
+    next(err)
+  }
 } 
