@@ -5,6 +5,7 @@ import userRouter from './routes/userRouter'
 import authRouter from './routes/authRouter'
 import expenseRouter from './routes/expenseRouter'
 import settingsRouter from './routes/settingsRouter'
+import homeRouter from './routes/homeRouter'
 
 const app = express()
 
@@ -24,6 +25,7 @@ app.use(cors())
 app.use(express.json())
 
 // Routes
+app.use('/', homeRouter)
 app.use('/auth', authRouter)
 app.use('/users', userRouter)
 app.use('/expenses', expenseRouter)
