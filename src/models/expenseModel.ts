@@ -3,7 +3,7 @@ import { Schema, model, Document } from 'mongoose'
 interface IExpense extends Document {
   amount: number
   category: string
-  description: string
+  description?: string | null
   date: Date
   user: Schema.Types.ObjectId
 }
@@ -12,11 +12,11 @@ const expenseSchema = new Schema<IExpense>(
   {
     amount: { type: Number, required: true },
     category: { type: String, required: true },
-    description: { type: String, required: true },
+    description: { type: String },
     date: { type: Date, required: true },
     user: { type: Schema.Types.ObjectId, ref: 'user', required: true },
   },
-  { timestamps: true }
+  { timestamps: true },
 )
 
 // Create indexes for common queries
@@ -25,4 +25,4 @@ expenseSchema.index({ category: 1 })
 
 const Expense = model<IExpense>('expense', expenseSchema)
 
-export default Expense 
+export default Expense

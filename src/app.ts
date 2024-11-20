@@ -30,12 +30,19 @@ app.use('/expenses', expenseRouter)
 app.use('/settings', settingsRouter)
 
 // Error handling middleware
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error(err.stack)
-  res.status(err.status || 500).json({
-    message: err.message || 'Internal Server Error',
-    status: err.status || 500
-  })
-})
+app.use(
+  (
+    err: any,
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction,
+  ) => {
+    console.error(err.stack)
+    res.status(err.status || 500).json({
+      message: err.message || 'Internal Server Error',
+      status: err.status || 500,
+    })
+  },
+)
 
-export default app
+export { app }
